@@ -13,3 +13,11 @@
 - Table `raw_sales`
 - Table `raw_customers`
 ...
+
+## Stage 2:
+- Created tables for storing **clean** data
+- The **raw** data has been cleared and inserted into tables
+### Stage 2 structure:
+- Table `customer_clean`
+- Table `sales_clean`
+
