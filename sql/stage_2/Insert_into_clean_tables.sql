@@ -17,16 +17,17 @@ WHERE sale_id IS NOT NULL
   AND sale_date IS NOT NULL
   AND discount_applied > 0; --remove all strings where discount_applied 0 to better analytics 
 
-  CREATE OR REPLACE TABLE RAW_DB.PUBLIC.customers_clean AS
-SELECT DISTINCT
+  INSERT INTO RAW_DB.PUBLIC.CUSTOMERS_CLEAN
+  SELECT DISTINCT
     customer_id,
-    INITCAP(first_name) AS first_name,
-    INITCAP(last_name) AS last_name,
-    LOWER(COALESCE(email, 'no_email@unknown.com')) AS email, --replace all null at email column to make data cleaner
+    INITCAP(first_name) as first_name,
+    INITCAP(last_name) as last_name,
+    LOWER(COALESCE(email, 'no_email@unknown.com')) as email,
     registration_date,
-    country, 
-    last_updated
-FROM RAW_DB.PUBLIC.raw_customers
-WHERE customer_id IS NOT NULL
-  AND first_name IS NOT NULL
-  AND registration_date <= CURRENT_DATE;
+    country,
+    last_updated,
+  FROM RAW_DB.PUBLIC.raw_customers
+  WHERE customer_id IS NOT NULL
+    AND email NOT LIKE '%NEW%'
+    AND first_name IS NOT NULL
+    AND registration_date <= CURRENT_DATE
