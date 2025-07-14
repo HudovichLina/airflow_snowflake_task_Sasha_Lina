@@ -21,3 +21,8 @@
 - Table `customer_clean`
 - Table `sales_clean`
 
+## Stage 3
+- Created datamart for analysis special amount of customers and discounts
+### Stage 3 structure:
+- Table `sales_customers_mart`
+
