@@ -1,7 +1,6 @@
-from airflow import DAG
-from pendulum import datetime
-from airflow.operators.python import PythonOperator
+from airflow.decorators import dag, task
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from pendulum import datetime
 from datetime import timedelta
 import logging
 import os
@@ -20,45 +19,46 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-def execute_ddl_sql():
-    log.info("Starting DDL execution from file: %s", DDL_SQL_PATH)
-
-    if not os.path.exists(DDL_SQL_PATH):
-        log.info("SQL file not found: %s", DDL_SQL_PATH)
-        raise FileNotFoundError(f"SQL file not found: {DDL_SQL_PATH}")
-
-    with open(DDL_SQL_PATH, 'r') as file:
-        sql_script = file.read()
-        statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
-
-    hook = SnowflakeHook(snowflake_conn_id='snowflake_conn')
-    conn = hook.get_conn()
-    cursor = conn.cursor()
-
-    try:
-        for i, statement in enumerate(statements, 1):
-            log.info("Executing SQL statement %d of %d", i, len(statements))
-            cursor.execute(statement)
-        conn.commit()
-        log.info("All DDL statements executed successfully.")
-    except Exception as e:
-        log.info("Error during SQL execution: %s", str(e))
-        raise
-    finally:
-        cursor.close()
-        conn.close()
-        log.info("Snowflake connection closed.")
-
-with DAG(
+@dag(
     dag_id='snowflake_ddl_dag',
     default_args=default_args,
     schedule=None,
     start_date=datetime(2025, 7, 7),
     catchup=False,
     tags=['snowflake', 'ddl'],
-) as dag:
+)
+def snowflake_ddl_dag():
 
-    run_ddl = PythonOperator(
-        task_id='run_ddl_sql',
-        python_callable=execute_ddl_sql,
-    )
+    @task(task_id='run_ddl_sql')
+    def execute_ddl_sql():
+        log.info("Starting DDL execution from file: %s", DDL_SQL_PATH)
+
+        if not os.path.exists(DDL_SQL_PATH):
+            log.error("SQL file not found: %s", DDL_SQL_PATH)
+            raise FileNotFoundError(f"SQL file not found: {DDL_SQL_PATH}")
+
+        with open(DDL_SQL_PATH, 'r') as file:
+            sql_script = file.read()
+            statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
+
+        hook = SnowflakeHook(snowflake_conn_id='snowflake_conn')
+        conn = hook.get_conn()
+        cursor = conn.cursor()
+
+        try:
+            for i, statement in enumerate(statements, 1):
+                log.info("Executing SQL statement %d of %d", i, len(statements))
+                cursor.execute(statement)
+            conn.commit()
+            log.info("All DDL statements executed successfully.")
+        except Exception as e:
+            log.error("Error during SQL execution: %s", str(e), exc_info=True)
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+            log.info("Snowflake connection closed.")
+
+    execute_ddl_sql()
+
+dag = snowflake_ddl_dag()
