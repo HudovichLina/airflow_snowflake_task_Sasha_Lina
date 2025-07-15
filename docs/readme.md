@@ -56,7 +56,7 @@ This DAG handles the entire ETL process: data loading, change detection, transfo
   - Normalizing negative amounts
   - Formatting names using `INITCAP`
 
-#### 4. `create_datamart_stage3`
+#### 4. `create_datamart_stage3` 
 
 - Creates a data mart table `sales_customers_mart` by joining cleaned sales and customer data
 - Orders data by `discount_applied` for downstream analysis
@@ -67,3 +67,7 @@ This DAG handles the entire ETL process: data loading, change detection, transfo
 
   - `USA_ANALYST` → Sees only U.S. data
   - `ASIA_ANALYST` → Sees only Asian region data
+
+## Time travel DAG
+
+**time_travel_dag_func** - make ```CLONE``` from snowflake time travel sytem with an offset of 1 hour (**the solution is simple and open for improvements**)

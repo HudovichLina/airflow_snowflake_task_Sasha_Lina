@@ -23,17 +23,25 @@ def snowflake_dag():
         conn = hook.get_conn()
         cursor = conn.cursor()
 
-        base_path = os.path.dirname(__file__)
-        file_path_sales = os.path.join(base_path, "..", "sample_data", "new_sales_data.csv")
-        file_path_customers = os.path.join(base_path, "..", "sample_data", "new_customers_data.csv")
+        directory = "/opt/air/dags/data/"
+        csv_files = []
+
+        for file_name in os.listdir(directory):
+            if file_name.endswith(".csv"):
+                csv_files.append(file_name)
+        if not csv_files:
+            log.warning("No CSV files found in directory.")
+            return "no_csv_files"
+
 
         try:
             cursor.execute("USE DATABASE RAW_DB")
             cursor.execute("USE SCHEMA PUBLIC")
 
-            log.info("Uploading sales and customers CSV to @my_stage...")
-            cursor.execute(f"PUT file://{file_path_sales} @my_stage AUTO_COMPRESS=TRUE")
-            cursor.execute(f"PUT file://{file_path_customers} @my_stage AUTO_COMPRESS=TRUE")
+            for file_name in csv_files:
+                file_path = os.path.join(directory, file_name)
+                log.info(f"Uploading {file_name} to @my_stage...")
+                cursor.execute(f"PUT file://{file_path} @my_stage AUTO_COMPRESS=TRUE")
 
             log.info("Loading into RAW_SALES and RAW_CUSTOMERS tables...")
             cursor.execute("""
@@ -218,24 +226,28 @@ def snowflake_dag():
             conn.close()
         
     @task(task_id = "secure_view")
-    def create_secure_view():
+    def check_secure_view():
         hook = SnowflakeHook(snowflake_conn_id="Snowflake_task_connection")
         conn = hook.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute("USE DATABASE RAW_DB")
             cursor.execute("USE SCHEMA PUBLIC")
-            secure_view = """CREATE OR REPLACE SECURE VIEW secure_sales_mart AS
-                             SELECT * FROM sales_customers_mart
-                             WHERE (CURRENT_ROLE() IN ('USA_ANALYST') AND country = 'USA')
-                                OR (CURRENT_ROLE() IN ('ASIA_ANALYST') AND region = 'Asia');""" 
+            check_view = """SELECT COUNT(*) FROM RAW_DB.INFORMATION_SCHEMA
+                             WHERE TABLE_NAME = 'SALES_CUSTOMERS_MART'
+                             AND TABLE_SCHEMA = 'PUBLIC' 
+                             AND TABLE_CATALOG = 'RAW_DB' """ 
             
-            cursor.execute(secure_view)
-            log.info("Secure view created successfully.")
+            cursor.execute(check_view)
+            exists = cursor.fetchone()[0]
+            if exists:
+                log.info("Secure view 'SECURE_SALES_MART' already exists. Skipping creation")
+            else:
+                log.info("Secure view does not exists.  Consider triggering init DAG or recreating it manually.")
         
         except Exception as e:
             conn.rollback()
-            log.error(f"Error creating secure view: {e}", exc_info=True)
+            log.error(f"Error checking secure view: {e}", exc_info=True)
             raise
 
         finally:
@@ -245,6 +257,6 @@ def snowflake_dag():
     
 
 
-    load_data_stage1() >> CDC_check() >> clean_data_stage2() >> create_datamart_stage3() >> create_secure_view()
+    load_data_stage1() >> CDC_check() >> clean_data_stage2() >> create_datamart_stage3() >> check_secure_view()
 
 dag = snowflake_dag()
