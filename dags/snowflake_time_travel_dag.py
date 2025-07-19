@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def time_travel_dag_func():
     @task(task_id="clone_backup_task")
     def make_clone():
-        hook = SnowflakeHook(snowflake_conn_id="Snowflake_task_connection")
+        hook = SnowflakeHook(snowflake_conn_id="snowflake_conn")
         conn = hook.get_conn()
         cursor = conn.cursor()
 

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # Paths
 DAG_FOLDER = os.path.dirname(os.path.abspath(__file__))
 SQL_TEMPLATES_DIR = os.path.join(os.path.dirname(DAG_FOLDER), 'sql')
-DDL_SQL_PATH = os.path.join(SQL_TEMPLATES_DIR, 'stage_1', 'DDL-queries.sql')
+DDL_SQL_PATH = os.path.join(SQL_TEMPLATES_DIR, 'stage_1', 'DDL_queries.sql')
 
 default_args = {
     'owner': 'airflow',
