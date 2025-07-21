@@ -111,14 +111,30 @@ CREATE STAGE IF NOT EXISTS RAW_DB.PUBLIC.my_stage;
 -- Row-Level Security (RLS)
 -- =============================
 
--- Create a Row Access Policy to restrict data by region
-CREATE OR REPLACE ROW ACCESS POLICY region_filter_policy
-AS (region STRING) RETURNS BOOLEAN ->
-    CURRENT_ROLE() = 'ACCOUNTADMIN' OR CURRENT_ROLE() = region;
+-- Create mapping table between roles and allowed regions
+CREATE OR REPLACE TABLE RAW_DB.PUBLIC.role_region_map (
+    role_name STRING,
+    allowed_region STRING
+);
 
--- Apply RLS policy to the data mart
+-- Insert allowed role-region pairs
+INSERT INTO RAW_DB.PUBLIC.role_region_map VALUES
+('ASIA', 'Asia'),
+('NORTH AMERICA', 'North America'),
+('EUROPE', 'Europe');
+
+-- Define Row Access Policy using the mapping table
+CREATE OR REPLACE ROW ACCESS POLICY RAW_DB.PUBLIC.region_filter_policy
+AS (region STRING) RETURNS BOOLEAN ->
+    CURRENT_ROLE() = 'ACCOUNTADMIN' OR
+    EXISTS (
+        SELECT 1
+        FROM RAW_DB.PUBLIC.role_region_map
+        WHERE role_name = CURRENT_ROLE() AND allowed_region = region
+    );
+
 ALTER TABLE RAW_DB.PUBLIC.sales_customers_mart
-ADD ROW ACCESS POLICY region_filter_policy ON (region);
+ADD ROW ACCESS POLICY RAW_DB.PUBLIC.region_filter_policy ON (region);
 
 -- ====================
 -- Secure Data Access
