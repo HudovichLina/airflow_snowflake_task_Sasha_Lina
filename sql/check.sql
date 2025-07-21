@@ -44,19 +44,20 @@ SELECT * FROM RAW_DB.PUBLIC.secure_sales_mart;
 
 -- Show all row access policies
 SHOW ROW ACCESS POLICIES;
+USE ROLE SECURITYADMIN;
+CREATE ROLE ASIA;
+GRANT ROLE ASIA TO USER LINAHUDOVICH; --change USERNAME
+SHOW GRANTS TO USER LINAHUDOVICH; --change USERNAME
+SELECT CURRENT_ROLE();
+USE ROLE ASIA;
+SELECT * FROM RAW_DB.PUBLIC.sales_customers_mart;
 
--- Create and use a role
-CREATE ROLE Asia;
-GRANT ROLE Asia TO USER ACCOUNTADMIN;
-USE ROLE Asia;
-
--- Check distinct regions in secure data
-SELECT DISTINCT region FROM RAW_DB.PUBLIC.secure_sales_mart;
 
 -- Restore table to state from 1 hour ago
 CREATE OR REPLACE TABLE RAW_DB.PUBLIC.sales_clean_restored AS
 SELECT * FROM RAW_DB.PUBLIC.sales_clean AT (OFFSET => -3600);
 
 -- View version history of table over last 24 hours
-SELECT * FROM RAW_DB.PUBLIC.sales_clean 
-VERSIONS BETWEEN (TIMESTAMP => CURRENT_TIMESTAMP() - INTERVAL '1 DAY') AND CURRENT_TIMESTAMP();
+SELECT * 
+FROM RAW_DB.PUBLIC.sales_clean 
+AT (TIMESTAMP => CURRENT_TIMESTAMP() - INTERVAL '10 MINUTE');
