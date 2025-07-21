@@ -78,7 +78,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/sql:/opt/airflow/sql
-    - ${AIRFLOW_PROJ_DIR:-.}/sample_data:/opt/airflow//sample_data
+    - ${AIRFLOW_PROJ_DIR:-.}/sample_data:/opt/airflow/sample_data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -257,14 +257,14 @@ services:
         echo
         echo "Creating missing opt dirs if missing:"
         echo
-        mkdir -v -p /opt/airflow/{logs,dags,plugins,config,sql,raw_data}
+        mkdir -v -p /opt/airflow/{logs,dags,plugins,config,sql,sample_data}
         echo
         echo "Airflow version:"
         /entrypoint airflow version
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sql,raw_data}
+        ls -la /opt/airflow/{logs,dags,plugins,config,sql,sample_data}
         echo
         echo "Running airflow config list to create default config file if missing."
         echo
@@ -272,7 +272,7 @@ services:
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sql,raw_data}
+        ls -la /opt/airflow/{logs,dags,plugins,config,sql,sample_data}
         echo
         echo "Change ownership of files in /opt/airflow to ${AIRFLOW_UID}:0"
         echo
@@ -280,11 +280,11 @@ services:
         echo
         echo "Change ownership of files in shared volumes to ${AIRFLOW_UID}:0"
         echo
-        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config,sql,raw_data}
+        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config,sql,sample_data}
         echo
         echo "Files in shared volumes:"
         echo
-        ls -la /opt/airflow/{logs,dags,plugins,config,sql,raw_data}
+        ls -la /opt/airflow/{logs,dags,plugins,config,sql,sample_data}
 
     # yamllint enable rule:line-length
     environment:
