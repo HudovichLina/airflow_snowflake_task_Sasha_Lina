@@ -1,0 +1,1 @@
+INSERT INTO FILE_LOAD_LOG(file_name) VALUES ('{{file_name}}.gz');
