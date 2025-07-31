@@ -1,0 +1,3 @@
+COPY INTO RAW_SALES
+FROM @RAW_DB.PUBLIC.my_stage/{{ file_name }}
+FILE_FORMAT = (FORMAT_NAME = 'CSV_FORMAT');
