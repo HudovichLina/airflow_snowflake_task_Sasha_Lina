@@ -1,4 +1,4 @@
-MERGE INTO sales_customers_mart tgt
+MERGE INTO RAW_DB.PUBLIC.sales_customers_mart tgt
 USING (
     SELECT 
         s.sale_id,
@@ -9,8 +9,8 @@ USING (
         c.country,
         s.region,
         s.discount_applied
-    FROM customers_clean c
-    JOIN sales_clean s ON c.customer_id = s.customer_id
+    FROM RAW_DB.PUBLIC.customers_clean c
+    JOIN RAW_DB.PUBLIC.sales_clean s ON c.customer_id = s.customer_id
 ) src
 ON tgt.sale_id = src.sale_id
 WHEN MATCHED THEN UPDATE SET

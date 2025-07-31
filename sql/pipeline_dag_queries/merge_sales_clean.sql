@@ -1,4 +1,4 @@
-MERGE INTO SALES_CLEAN target 
+MERGE INTO RAW_DB.PUBLIC.SALES_CLEAN target 
 USING (
     SELECT
         sale_id,
@@ -11,12 +11,27 @@ USING (
         region,
         data_source,
         last_updated
-    FROM RAW_SALES
-    WHERE 
-        sale_id IS NOT NULL
-        AND customer_id IS NOT NULL 
-        AND sale_date IS NOT NULL
-        AND discount_applied > 0
+    FROM (
+        SELECT
+            sale_id,
+            customer_id,
+            product_id,
+            store_id,
+            sale_date,
+            amount,
+            discount_applied,
+            region,
+            data_source,
+            last_updated,
+            ROW_NUMBER() OVER (PARTITION BY sale_id ORDER BY last_updated DESC) AS rn
+        FROM RAW_DB.PUBLIC.RAW_SALES
+        WHERE 
+            sale_id IS NOT NULL
+            AND customer_id IS NOT NULL 
+            AND sale_date IS NOT NULL
+            AND discount_applied > 0
+    ) ranked
+    WHERE rn = 1
 ) source
 ON target.sale_id = source.sale_id
 WHEN MATCHED AND source.last_updated > target.last_updated THEN

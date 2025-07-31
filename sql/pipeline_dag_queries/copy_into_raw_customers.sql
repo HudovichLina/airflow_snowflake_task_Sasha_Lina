@@ -1,3 +1,3 @@
 COPY INTO RAW_CUSTOMERS
-FROM @my_stage/{{file_name}}
+FROM @RAW_DB.PUBLIC.my_stage/{{ file_name }}
 FILE_FORMAT = (FORMAT_NAME = 'CSV_FORMAT');
