@@ -2,7 +2,7 @@ from airflow.decorators import dag, task
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pendulum import datetime
 from utils.config import SNOWFLAKE_CONNECTION as SN
-from utils.snowflake_utils import render_sql_template, run_sql_file
+from utils.snowflake_utils import run_sql_file
 import logging
 import os
 
@@ -81,7 +81,6 @@ def snowflake_dag():
 
         log.info("Starting datamart merge...")
 
-        hook = SnowflakeHook(snowflake_conn_id='Snowflake_task_connection')
         run_sql_file(DAG_DIR, hook, "merge_sales_customers_mart.sql")
 
         total_count = hook.get_first("SELECT COUNT(*) FROM RAW_DB.PUBLIC.sales_customers_mart")[0]
